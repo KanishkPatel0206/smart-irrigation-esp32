@@ -43,8 +43,12 @@ const unsigned long MIN_OFF_MS   = 10UL * 60UL * 1000UL;   // rest between cycle
 const unsigned long DAILY_MAX_MS = 60UL * 60UL * 1000UL;   // 60 min per 24 h
 
 // --- Timing ---
-const unsigned long CONTROL_INTERVAL_MS = 2000;
-const unsigned long LOG_INTERVAL_MS     = 10000;
+// Soil is checked once per hour when idle (less heat, less wear). While the valve is
+// open it is checked every few seconds so watering still stops at the upper threshold.
+const unsigned long IDLE_CHECK_INTERVAL_MS     = 60UL * 60UL * 1000UL;  // 1 hour
+const unsigned long WATERING_CHECK_INTERVAL_MS = 5000;                  // 5 s while watering
+const unsigned long LOG_INTERVAL_MS            = 10000;
+const uint32_t      CPU_FREQ_MHZ = 80;   // lower clock = less heat (no WiFi, could go to 40)
 const uint32_t      WDT_TIMEOUT_S       = 30;
 
 // --- Sensor sanity / default calibration ---
@@ -74,6 +78,7 @@ float   moisturePct = NAN;
 uint8_t validProbes = 0;
 
 unsigned long lastControlAt = 0;
+bool          firstCheck    = true;   // run one soil check right at boot
 unsigned long lastLogAt     = 0;
 
 String lastReason = "boot";
@@ -273,6 +278,7 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   relayWrite(false);
 
+  setCpuFrequencyMhz(CPU_FREQ_MHZ);   // lower clock = less heat
   Serial.begin(115200);
   delay(300);
   Serial.println("\n=== Smart Plant Irrigation System (soil-only) ===");
@@ -298,7 +304,11 @@ void loop() {
 
   handleSerial();
 
-  if (now - lastControlAt >= CONTROL_INTERVAL_MS) {
+  // Soil check: hourly when idle, every few seconds while watering.
+  unsigned long checkInterval = (state == WATERING) ? WATERING_CHECK_INTERVAL_MS
+                                                    : IDLE_CHECK_INTERVAL_MS;
+  if (firstCheck || now - lastControlAt >= checkInterval) {
+    firstCheck = false;
     lastControlAt = now;
     State before = state;
     runControl();
