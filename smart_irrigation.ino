@@ -61,13 +61,19 @@ const float RAIN_LIMIT_PCT     = 40.0;   // no watering if rain probability >= t
 const unsigned long MAX_RUN_MS        = 15UL * 60UL * 1000UL;      // 15 min per cycle
 const unsigned long MIN_OFF_MS        = 10UL * 60UL * 1000UL;      // rest between cycles
 const unsigned long DAILY_MAX_MS      = 60UL * 60UL * 1000UL;      // 60 min per 24 h
-const unsigned long WEATHER_STALE_MS  = 2UL * 60UL * 60UL * 1000UL; // forecast max age
+const unsigned long WEATHER_STALE_MS  = 3UL * 60UL * 60UL * 1000UL; // forecast max age
 const bool ALLOW_WATERING_WITHOUT_WEATHER = false;  // false = fail safe (valve stays shut)
 
 // --- Timing ---
-const unsigned long CONTROL_INTERVAL_MS = 2000;
-const unsigned long LOG_INTERVAL_MS     = 10000;
-const unsigned long WEATHER_INTERVAL_MS = 15UL * 60UL * 1000UL;    // 15 min
+// Soil is checked once per hour when idle (less heat, less wear). While the valve is
+// open it is checked every few seconds so watering still stops at the upper threshold.
+const unsigned long IDLE_CHECK_INTERVAL_MS     = 60UL * 60UL * 1000UL;  // 1 hour
+const unsigned long WATERING_CHECK_INTERVAL_MS = 5000;                  // 5 s while watering
+const unsigned long LOG_INTERVAL_MS            = 10000;
+// Forecast is refreshed just before each hourly check (and every 15 min while watering).
+const unsigned long WEATHER_IDLE_INTERVAL_MS     = 55UL * 60UL * 1000UL;
+const unsigned long WEATHER_WATERING_INTERVAL_MS = 15UL * 60UL * 1000UL;
+const uint32_t      CPU_FREQ_MHZ = 80;   // 80 MHz is the lowest speed that keeps WiFi working
 const unsigned long WIFI_RETRY_MS       = 30000;
 const uint32_t      WDT_TIMEOUT_S       = 30;
 
@@ -106,6 +112,7 @@ unsigned long lastWeatherOkAt = 0;
 unsigned long lastWeatherTry  = 0;
 
 unsigned long lastControlAt = 0;
+bool          firstCheck    = true;   // run one soil check right at boot
 unsigned long lastLogAt     = 0;
 unsigned long lastWifiTry   = 0;
 
@@ -418,6 +425,7 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   relayWrite(false);
 
+  setCpuFrequencyMhz(CPU_FREQ_MHZ);   // lower clock = less heat
   Serial.begin(115200);
   delay(300);
   Serial.println("\n=== Smart Plant Irrigation System ===");
@@ -447,9 +455,16 @@ void loop() {
   handleSerial();
   maintainWifi();
 
-  if (now - lastWeatherTry >= WEATHER_INTERVAL_MS) updateWeather();
+  // Refresh the forecast just before each soil check (more often while watering).
+  unsigned long wxInterval = (state == WATERING) ? WEATHER_WATERING_INTERVAL_MS
+                                                 : WEATHER_IDLE_INTERVAL_MS;
+  if (now - lastWeatherTry >= wxInterval) updateWeather();
 
-  if (now - lastControlAt >= CONTROL_INTERVAL_MS) {
+  // Soil check: hourly when idle, every few seconds while watering.
+  unsigned long checkInterval = (state == WATERING) ? WATERING_CHECK_INTERVAL_MS
+                                                    : IDLE_CHECK_INTERVAL_MS;
+  if (firstCheck || now - lastControlAt >= checkInterval) {
+    firstCheck = false;
     lastControlAt = now;
     State before = state;
     runControl();
