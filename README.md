@@ -37,7 +37,7 @@ Each sketch must stay in a folder with the same name as its `.ino` file, or the 
 
 ### Soil-only version
 1. **Sense:** averages 16 ADC samples from each soil probe and converts each to 0-100 % using its calibration. Faulty probes are ignored.
-2. **Decide:** every 2 seconds a state machine compares moisture with the thresholds.
+2. **Decide:** a state machine compares moisture with the thresholds. The soil is checked **once per hour** while idle, and every **5 seconds while the valve is open** so watering still stops promptly.
 3. **Water:** the relay opens or closes the valve.
 4. **Verify and log:** a status line is printed to Serial every 10 seconds and on every valve change.
 
@@ -45,7 +45,7 @@ Each sketch must stay in a folder with the same name as its `.ino` file, or the 
 
 ### Weather-aware version
 Same as above, plus:
-- Every 15 minutes (and at startup) it fetches the OpenWeatherMap forecast and takes the highest rain probability over the next ~6 hours.
+- Just before each hourly soil check (and every 15 minutes while watering), it fetches the OpenWeatherMap forecast and takes the highest rain probability over the next ~6 hours.
 - It also logs air temperature and humidity from the DHT22 (logging only, not used for decisions).
 
 **Rule:** water when soil moisture is **below 48.5 %** AND rain probability is **below 40 %**. Stop at **80 %** moisture, or when rain probability reaches 40 %.
@@ -57,7 +57,7 @@ Same as above, plus:
 | Start watering | Moisture < 48.5 % | Moisture < 48.5 % **and** rain < 40 % |
 | Stop: upper moisture | >= 80 % | >= 80 % |
 | Stop: rain | Not checked | Rain >= 40 % |
-| Stop: forecast stale (> 2 h) | Not applicable | Yes (unless `ALLOW_WATERING_WITHOUT_WEATHER`) |
+| Stop: forecast stale (> 3 h) | Not applicable | Yes (unless `ALLOW_WATERING_WITHOUT_WEATHER`) |
 | Stop: safety timeout | 15 min per cycle | 15 min per cycle |
 | Stop: daily cap | 60 min per 24 h | 60 min per 24 h |
 | Stop: all probes faulty | Yes | Yes |
@@ -153,6 +153,9 @@ Values are saved to flash and survive reboots. For best results, also record raw
 | `RELAY_ACTIVE_LOW` | `true` | Set to `false` for a high-trigger relay |
 | `START_MOISTURE_PCT` | 48.5 | Start watering below this |
 | `STOP_MOISTURE_PCT` | 80.0 | Stop watering at or above this |
+| `IDLE_CHECK_INTERVAL_MS` | 1 hour | How often the soil is checked while the valve is closed |
+| `WATERING_CHECK_INTERVAL_MS` | 5 s | How often the soil is checked while the valve is open |
+| `CPU_FREQ_MHZ` | 80 | CPU clock speed (lower = less heat) |
 | `MAX_RUN_MS` | 15 min | Maximum length of one watering cycle |
 | `MIN_OFF_MS` | 10 min | Minimum rest between cycles |
 | `DAILY_MAX_MS` | 60 min | Maximum watering per 24 h |
@@ -162,10 +165,11 @@ Values are saved to flash and survive reboots. For best results, also record raw
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `RAIN_LIMIT_PCT` | 40.0 | No watering if rain probability is at or above this |
-| `WEATHER_STALE_MS` | 2 h | Forecast older than this counts as unavailable |
+| `WEATHER_STALE_MS` | 3 h | Forecast older than this counts as unavailable |
 | `ALLOW_WATERING_WITHOUT_WEATHER` | `false` | If `false`, the valve stays shut without a fresh forecast |
 | `FORECAST_ENTRIES` | 2 | Number of 3-hour forecast steps to check |
-| `WEATHER_INTERVAL_MS` | 15 min | How often the forecast is fetched |
+| `WEATHER_IDLE_INTERVAL_MS` | 55 min | Forecast refresh interval while idle (just before the hourly check) |
+| `WEATHER_WATERING_INTERVAL_MS` | 15 min | Forecast refresh interval while watering |
 
 ## Safety features (both versions)
 
