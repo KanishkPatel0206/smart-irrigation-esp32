@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Plant Irrigation System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3ee;--bg2:#e2ebe3;--ink:#16221b;--mute:#52635a;--line:#c5d3c9;
+  --water:#1b86ad;--leaf:#2f7d46;--soil:#6b4a35;--amber:#c98a0a;--on:#fff;--hdr:#eef3eef2;
+  --head:"Bricolage Grotesque",Georgia,serif;--body:"Figtree",system-ui,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13100e;--bg2:#1d1814;--ink:#ece6dc;--mute:#a89d90;--line:#3a3028;
+  --water:#4cb8de;--leaf:#6cc283;--soil:#b98a68;--amber:#f0b73a;--on:#13100e;--hdr:#13100ef2;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13100e;--bg2:#1d1814;--ink:#ece6dc;--mute:#a89d90;--line:#3a3028;
+  --water:#4cb8de;--leaf:#6cc283;--soil:#b98a68;--amber:#f0b73a;--on:#13100e;--hdr:#13100ef2;color-scheme:dark}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--hdr);backdrop-filter:blur(8px)}
+h1,h2,h3{font-family:var(--head);line-height:1.05;margin:0;letter-spacing:-.02em}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;gap:16px}
+.brand{font:700 17px var(--head);text-decoration:none;white-space:nowrap}
+nav{display:flex;gap:20px;font-size:15px;overflow-x:auto}
+nav a{text-decoration:none;color:var(--mute);white-space:nowrap}
+nav a:hover,nav a:focus-visible{color:var(--ink)}
+:focus-visible{outline:2px solid var(--water);outline-offset:3px;border-radius:4px}
+
+/* hero */
+.hero{padding:56px 0 64px}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+h1{font-size:clamp(40px,6.4vw,78px);font-weight:800}
+.lede{font-size:19px;color:var(--mute);max-width:34em;margin:20px 0 26px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 28px;margin:0;padding:0;list-style:none}
+.facts li{display:flex;flex-direction:column;font-size:14px;color:var(--mute)}
+.facts b{font:700 26px var(--head);color:var(--ink)}
+
+/* simulator */
+.sim{background:var(--bg2);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;grid-template-columns:120px 1fr;gap:22px}
+.sim h2{grid-column:1/-1;font-size:20px}
+.sim h2 small{display:block;font:400 14px var(--body);color:var(--mute);margin-top:4px;letter-spacing:0}
+.gauge{width:120px;height:auto}
+.tube{fill:none;stroke:var(--line);stroke-width:3}
+.fill{fill:var(--water);transform-box:fill-box;transform-origin:bottom;transition:transform .35s ease,fill .3s}
+.mk{stroke:var(--amber);stroke-width:2;stroke-dasharray:4 3}
+.mt{fill:var(--mute);font:500 9px var(--body)}
+.drop{fill:var(--water);opacity:0}
+.is-open .drop{animation:fall 1s linear infinite}
+.is-open .drop:nth-child(2){animation-delay:.33s}.is-open .drop:nth-child(3){animation-delay:.66s}
+@keyframes fall{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(46px)}}
+.ctl label{display:flex;justify-content:space-between;font-weight:600;font-size:15px;margin-top:14px}
+.ctl output{color:var(--water);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--water);margin:6px 0 0}
+.mode{display:flex;gap:8px;margin:2px 0 4px}
+.mode label{margin:0;flex:1;justify-content:center;border:1px solid var(--line);border-radius:999px;padding:6px 8px;font-size:14px;cursor:pointer}
+.mode input{position:absolute;opacity:0}
+.mode label:has(input:checked){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mode label:has(input:focus-visible){outline:2px solid var(--water);outline-offset:2px}
+.out{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.valve{font:700 20px var(--head)}
+.valve i{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--mute);margin-right:8px;vertical-align:1px}
+.is-open .valve i{background:var(--water);box-shadow:0 0 0 5px color-mix(in srgb,var(--water) 25%,transparent)}
+.why{margin:4px 0 0;font-size:14px;color:var(--mute)}
+
+/* sections */
+section{padding:72px 0;border-top:1px solid var(--line)}
+section h2{font-size:clamp(30px,4.4vw,48px);max-width:16em}
+.sub{color:var(--mute);max-width:38em;margin:14px 0 0}
+.stmts{margin-top:36px}
+.stmt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:28px;padding:22px 0;border-top:1px solid var(--line)}
+.stmt h3{font-size:28px}
+.stmt p{margin:0;color:var(--mute)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:40px;position:relative}
+.flow::before{content:"";position:absolute;left:0;right:0;top:15px;height:2px;background:linear-gradient(90deg,var(--leaf),var(--water))}
+.step{position:relative;padding:0 18px 0 0}
+.step b{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);font:700 15px var(--head);position:relative}
+.step h3{font-size:24px;margin:14px 0 6px}
+.step p{margin:0;font-size:15px;color:var(--mute)}
+.note{margin-top:34px;padding:16px 18px;border-left:4px solid var(--amber);background:var(--bg2);border-radius:0 12px 12px 0}
+.ledger{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;margin-top:36px;align-items:start}
+.ledger ul{list-style:none;margin:0;padding:0}
+.ledger li{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.ledger li span:first-child small{display:block;color:var(--mute);font-size:13px}
+.ledger li span:last-child{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.budget b{font:800 clamp(44px,7vw,72px)/1 var(--head);color:var(--leaf)}
+.bar{height:14px;border-radius:99px;background:var(--bg2);border:1px solid var(--line);margin:14px 0 8px;overflow:hidden}
+.bar i{display:block;height:100%;width:18.3%;background:var(--leaf)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:36px;border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.two>div{padding:28px}
+.two>div:first-child{background:var(--bg2)}
+.two h3{font-size:26px;margin-bottom:4px}
+.two .tag{color:var(--mute);font-size:14px;margin:0 0 14px}
+.two ul{margin:0;padding-left:20px;color:var(--mute)}
+.two li{margin:6px 0}
+.two code,.mono{font:500 .85em ui-monospace,Menlo,Consolas,monospace;background:var(--bg);padding:1px 6px;border-radius:5px}
+.safe{columns:2;column-gap:48px;margin:30px 0 0;padding:0;list-style:none}
+.safe li{break-inside:avoid;padding:10px 0 10px 30px;position:relative;border-bottom:1px solid var(--line)}
+.safe li::before{content:"";position:absolute;left:4px;top:17px;width:12px;height:7px;border-left:3px solid var(--leaf);border-bottom:3px solid var(--leaf);transform:rotate(-45deg)}
+.road{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:34px}
+.road div{border-top:4px solid var(--leaf);padding-top:12px}
+.road b{font:700 22px var(--head);display:block}
+.road span{color:var(--water);font-weight:600;font-size:14px}
+.road p{margin:6px 0 0;font-size:15px;color:var(--mute)}
+.next{margin-top:26px;font-weight:600}
+footer{padding:48px 0 64px;border-top:1px solid var(--line);background:var(--bg2)}
+footer .wrap{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+footer h3{font-size:22px;margin-bottom:8px}
+footer p{margin:2px 0;color:var(--mute);font-size:15px}
+.fine{grid-column:1/-1;font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:18px}
+
+@media (max-width:860px){
+  .hero .wrap,.ledger,.two,footer .wrap{grid-template-columns:1fr}
+  .stmt{grid-template-columns:1fr;gap:8px}
+  .flow{grid-template-columns:1fr;gap:26px}
+  .flow::before{left:15px;right:auto;top:0;bottom:0;width:2px;height:auto}
+  .step{padding-left:48px}.step b{position:absolute;left:0;top:0}.step h3{margin-top:0}
+  .safe{columns:1}.road{grid-template-columns:1fr}
+  nav{gap:14px}
+}
+@media (max-width:420px){.sim{grid-template-columns:1fr}.gauge{width:100px;margin:auto}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="#top">Smart Plant Irrigation</a>
+<nav><a href="#try">Try it</a><a href="#loop">How it works</a><a href="#parts">Hardware</a><a href="#firmware">Firmware</a><a href="#team">Team</a></nav></div></header>
+
+<main id="top">
+<div class="hero"><div class="wrap">
+  <div>
+    <h1>Water when the soil asks, not when the clock says.</h1>
+    <p class="lede">An ESP32 controller that reads soil moisture, checks the rain forecast, and opens a valve only when the plants need it. Built by NSS students at IIT Tirupati for small gardens, nurseries and pilot plots.</p>
+    <ul class="facts"><li><b>48.5 → 80%</b>moisture band</li><li><b>&lt; 40%</b>rain chance to water</li><li><b>₹3,668</b>hardware cost</li></ul>
+  </div>
+
+  <div class="sim" id="try">
+    <h2>Try the controller<small>Drag the sliders. The valve follows the same rules as the firmware.</small></h2>
+    <svg class="gauge" viewBox="0 0 120 250" role="img" aria-label="Soil moisture gauge">
+      <rect x="52" y="0" width="16" height="14" rx="3" fill="var(--mute)"/>
+      <g><circle class="drop" cx="60" cy="20" r="3.5"/><circle class="drop" cx="60" cy="20" r="3.5"/><circle class="drop" cx="60" cy="20" r="3.5"/></g>
+      <rect class="tube" x="30" y="40" width="60" height="200" rx="10"/>
+      <rect id="fill" class="fill" x="32" y="42" width="56" height="196" rx="8"/>
+      <line class="mk" x1="22" x2="98" y1="143" y2="143"/><text class="mt" x="94" y="139" text-anchor="end">start 48.5</text>
+      <line class="mk" x1="22" x2="98" y1="81" y2="81"/><text class="mt" x="94" y="77" text-anchor="end">stop 80</text>
+    </svg>
+    <div class="ctl">
+      <div class="mode" role="radiogroup" aria-label="Firmware version">
+        <label><input type="radio" name="v" id="wx" checked>Weather-aware</label>
+        <label><input type="radio" name="v" id="so">Soil-only</label>
+      </div>
+      <label for="m">Soil moisture <output id="mo">40%</output></label>
+      <input type="range" id="m" min="0" max="100" value="40">
+      <label for="r">Rain probability <output id="ro">10%</output></label>
+      <input type="range" id="r" min="0" max="100" value="10">
+      <div class="out" id="out"><div class="valve"><i></i><span id="vs">Valve closed</span></div><p class="why" id="why"></p></div>
+    </div>
+  </div>
+</div></div>
+
+<section><div class="wrap">
+  <h2>Guesswork wastes water and crops.</h2>
+  <div class="stmts">
+    <div class="stmt"><h3>Too much water</h3><p>Schedules set by habit cause runoff, and waste water and energy.</p></div>
+    <div class="stmt"><h3>Too little water</h3><p>Water stress lowers crop health, yield and production.</p></div>
+    <div class="stmt"><h3>Blind to the weather</h3><p>A fixed timer keeps running even when rain is on the way.</p></div>
+  </div>
+</div></section>
+
+<section id="loop"><div class="wrap">
+  <h2>A simple loop that repeats all day.</h2>
+  <div class="flow">
+    <div class="step"><b>1</b><h3>Sense</h3><p>Capacitive probes measure soil moisture without corroding.</p></div>
+    <div class="step"><b>2</b><h3>Decide</h3><p>The ESP32 compares moisture and rain chance with its thresholds.</p></div>
+    <div class="step"><b>3</b><h3>Water</h3><p>A relay opens the 12 V solenoid valve into the drip line.</p></div>
+    <div class="step"><b>4</b><h3>Verify</h3><p>It reads the soil again and logs what happened and why.</p></div>
+  </div>
+  <p class="note">The soil is checked once an hour while idle to keep the electronics cool, and every 5 seconds while the valve is open so watering stops right at 80%.</p>
+</div></section>
+
+<section id="parts"><div class="wrap">
+  <h2>A full controller for under ₹4,000.</h2>
+  <p class="sub">Prices from the project report; verify quotes before purchase. The firmware uses two probes and keeps two spare for backup or later expansion.</p>
+  <div class="ledger">
+    <ul>
+      <li><span>ESP32 DevBoard (38-pin)<small>Reads sensors, runs the logic</small></span><span>₹719</span></li>
+      <li><span>Capacitive moisture sensors ×4<small>2 active, 2 spare</small></span><span>₹1,016</span></li>
+      <li><span>Solenoid valve, 12 V<small>Lets water into the drip pipes</small></span><span>₹769</span></li>
+      <li><span>12 V 2 A adapter<small>Powers the valve</small></span><span>₹425</span></li>
+      <li><span>Breadboard<small>Prototype wiring</small></span><span>₹300</span></li>
+      <li><span>G1/2″ hose connectors<small>Valve to garden pipe</small></span><span>₹200</span></li>
+      <li><span>Relay module, 5 V<small>Switches the 12 V valve safely</small></span><span>₹71</span></li>
+      <li><span>Barrel jack, jumper wires, buck converter<small>₹50 + ₹49 + ₹49</small></span><span>₹148</span></li>
+      <li><span>1N4007 diode<small>Absorbs voltage spikes at valve close</small></span><span>₹20</span></li>
+    </ul>
+    <div class="budget"><b>₹3,668</b><div class="bar" role="img" aria-label="18% of the budget"><i></i></div>
+      <p class="sub" style="margin:0">of a ₹20,000 target, leaving ₹16,332 unspent.</p></div>
+  </div>
+</div></section>
+
+<section id="firmware"><div class="wrap">
+  <h2>Two firmware versions, one set of safety rules.</h2>
+  <div class="two">
+    <div><h3>Weather-aware</h3><p class="tag">The final system</p>
+      <ul><li>Fetches the OpenWeatherMap forecast and takes the highest rain chance over about 6 hours</li>
+      <li>Waters only if moisture &lt; 48.5% and rain &lt; 40%</li>
+      <li>Stays shut if the forecast goes stale (3 h)</li>
+      <li>Logs air temperature and humidity from a DHT22</li>
+      <li>Needs 2.4 GHz WiFi and an API key</li></ul></div>
+    <div><h3>Soil-only</h3><p class="tag">For bench tests and offline plots</p>
+      <ul><li>No WiFi, no API key, no extra libraries</li>
+      <li>Waters whenever moisture &lt; 48.5%, stops at 80%</li>
+      <li>Same calibration, timers and protections</li>
+      <li>Does not know about rain, so it can water before a storm</li></ul></div>
+  </div>
+  <ul class="safe">
+    <li>Valve is forced off at boot, before anything else runs</li>
+    <li>15-minute limit on every watering cycle</li>
+    <li>10-minute rest between cycles</li>
+    <li>60-minute daily watering cap</li>
+    <li>Closes on a faulty probe; one good probe keeps it running</li>
+    <li>30-second watchdog restarts a frozen board</li>
+    <li>Dry and wet calibration saved to flash from the Serial Monitor</li>
+  </ul>
+</div></section>
+
+<section><div class="wrap">
+  <h2>From requirements to a working model.</h2>
+  <div class="road">
+    <div><b>Requirement analysis</b><span>October</span><p>Studied the problem, defined requirements, listed components.</p></div>
+    <div><b>Working principle and plan</b><span>December</span><p>Planned the architecture, interfacing and workflow.</p></div>
+    <div><b>Implementation</b><span>January</span><p>Wrote the ESP32 program and integrated hardware with software.</p></div>
+  </div>
+  <p class="next">Next: calibrate, run a pilot, then weatherproof and document. Later: a cloud dashboard, solar power and multiple crops.</p>
+</div></section>
+</main>
+
+<footer id="team"><div class="wrap">
+  <div><h3>Team</h3><p>Kanishk Navin Patel, Mechanical Engineering</p><p>Satvik Gaur, Civil Engineering</p><p>Chaman Lal Seju, Engineering Physics</p></div>
+  <div><h3>Mentor</h3><p>Dr B Janaki Ramaiah</p><p>NSS Unit, IIT Tirupati</p><p>National Service Scheme, socially relevant project</p></div>
+  <p class="fine">The firmware has not yet been validated on hardware. Water savings and yield benefits are goals to measure in a pilot, not proven results.</p>
+</div></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+let open=false;
+function update(){
+  const m=+$('m').value,r=+$('r').value,wx=$('wx').checked,why=$('why');
+  $('r').disabled=!wx;$('r').style.opacity=wx?1:.4;
+  $('mo').textContent=m+'%';$('ro').textContent=wx?r+'%':'ignored';
+  const rainBlock=wx&&r>=40;let msg;
+  if(open){
+    if(m>=80){open=false;msg='Soil reached 80%, so the valve closes.'}
+    else if(rainBlock){open=false;msg='Rain is likely (40% or more), so the valve closes.'}
+    else msg='Watering continues until the soil reaches 80%.';
+  }else{
+    if(m<48.5&&!rainBlock){open=true;msg='Soil is below 48.5% and rain is unlikely, so the valve opens.'}
+    else if(m<48.5)msg='Soil is dry, but rain is likely. Holding off.';
+    else msg='Soil moisture is fine. The valve stays closed.';
+  }
+  $('fill').style.transform='scaleY('+Math.max(m,0.5)/100+')';
+  $('out').classList.toggle('is-open',open);
+  document.querySelector('.sim').classList.toggle('is-open',open);
+  $('vs').textContent=open?'Valve open':'Valve closed';
+  why.textContent=msg;
+}
+['m','r','wx','so'].forEach(id=>$(id).addEventListener('input',update));
+update();
+</script>
+</body>
+</html>
